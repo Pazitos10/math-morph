@@ -1,4 +1,3 @@
-from itertools import product
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -26,6 +25,7 @@ class FilterManager():
         return plt.imshow(img, cmap=plt.cm.binary_r)
 
     def _center_img(self, img):
+        """Center the image"""
         img = self.apply_threshold(img)
         centered_img = np.ones_like(img, dtype=np.int64)
         half_w, half_h = centered_img.shape[0]//2, centered_img.shape[1]//2
@@ -73,13 +73,13 @@ class FilterManager():
 
     def apply_filter(self, operator='er', img=None, n_iterations=1, as_gray=False):
         """Applies a morphological operator a certain number of times (n_iterations) to an image"""
-        
+
         if not as_gray:
             img = self.apply_threshold(img)
 
-        w, h = img.shape
+        width, height = img.shape
         radius = self.selem.shape[0]
-        pad_img_shape = (w + radius - 1, h + radius - 1)
+        pad_img_shape = (width + radius - 1, height + radius - 1)
 
         if operator == 'op':
             return self._opening(img, as_gray)
@@ -99,11 +99,11 @@ class FilterManager():
         if n_iterations >= 1:
 
             pad_img = np.zeros(pad_img_shape).astype(np.float64)
-            pad_img[radius-2:(w + radius-2), radius-2:(h + radius-2)] = img            
+            pad_img[radius-2:(width + radius-2), radius-2:(height + radius-2)] = img
             img_result = np.zeros(pad_img_shape).astype(np.float64)
 
-            for i in range(w):
-                for j in range(h):
+            for i in range(width):
+                for j in range(height):
                     neighbors = pad_img[i:i+radius, j:j+radius]
                     if as_gray:
                         neighbors = np.delete(neighbors.flatten(), radius+1)
@@ -112,7 +112,7 @@ class FilterManager():
                     if operator == 'di':
                         img_result[i+1, j+1] = self._dilation(neighbors, as_gray)
 
-            img_result = img_result[radius-2:w+radius-2, radius-2:h+radius-2]
+            img_result = img_result[radius-2:width+radius-2, radius-2:height+radius-2]
             return self.apply_filter(operator, img_result, n_iterations-1, as_gray)
         else:
             return img
@@ -141,11 +141,15 @@ class FilterManager():
 
     def _opening(self, img, as_gray):
         """Applies the opening operation"""
-        return self.apply_filter('di', self.apply_filter('er', img, as_gray=as_gray), as_gray=as_gray)
+        return self.apply_filter('di',
+                                 self.apply_filter('er', img, as_gray=as_gray),
+                                 as_gray=as_gray)
 
     def _closing(self, img, as_gray):
         """Applies the closing operation"""
-        return self.apply_filter('er', self.apply_filter('di', img, as_gray=as_gray), as_gray=as_gray)
+        return self.apply_filter('er',
+                                 self.apply_filter('di', img, as_gray=as_gray),
+                                 as_gray=as_gray)
 
     def _internal_gradient(self, img, as_gray):
         """Applies the internal gradient operation"""
@@ -157,7 +161,9 @@ class FilterManager():
 
     def _morphological_gradient(self, img, as_gray):
         """Applies the morphological gradient operation"""
-        return self.apply_filter('di', img, as_gray=as_gray) - self.apply_filter('er', img, as_gray=as_gray)
+        dilated = self.apply_filter('di', img, as_gray=as_gray)
+        eroded = self.apply_filter('er', img, as_gray=as_gray)
+        return dilated - eroded
 
     def _white_top_hat(self, img, as_gray):
         """Applies the white top-hat operation"""
