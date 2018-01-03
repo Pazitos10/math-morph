@@ -28,7 +28,6 @@ plt.imshow(eroded_img)
 Structuring elements:
 ![](selem-types.png)
 
-
 Different filters applied to the original image:
 ![](filters.png)
 
@@ -41,6 +40,8 @@ Different structuring element types (3x3)
 Different structuring element sizes
 ![](filters-multiple-selem-sizes.png)
 
+Applying grayscale filters
+![](filters-grayscale.png)
 
 ##### To Do
 

@@ -29,7 +29,7 @@ class FilterManager():
         img = self.apply_threshold(img)
         centered_img = np.ones_like(img, dtype=np.int64)
         half_w, half_h = centered_img.shape[0]//2, centered_img.shape[1]//2
-        cr_img = self._crop_zero_values(img, True)
+        cr_img = self.crop_zero_values(img, True)
         cr_w, cr_h = cr_img.shape
         center_y = half_h - (cr_h // 2)
         center_x = half_w - (cr_w // 2)
@@ -51,7 +51,7 @@ class FilterManager():
         return np.equal(np.take(window, self.selem_white_idx),
                         np.take(self.selem, self.selem_white_idx)).all()
 
-    def _crop_zero_values(self, img, inverted=False):
+    def crop_zero_values(self, img, inverted=False):
         """Crop zero values from the image boundaries returning a new image without empty borders"""
         width, height = img.shape
         xmin, xmax = 0, width
@@ -72,8 +72,8 @@ class FilterManager():
         return img[xmin:xmax+1, ymin:ymax+1]
 
     def apply_filter(self, operator='er', img=None, n_iterations=1, as_gray=False):
-        """Applies a morphological operator to an image multiple times (n_iterations)"""
-
+        """Applies a morphological operator a certain number of times (n_iterations) to an image"""
+        
         if not as_gray:
             img = self.apply_threshold(img)
 
@@ -82,29 +82,31 @@ class FilterManager():
         pad_img_shape = (w + radius - 1, h + radius - 1)
 
         if operator == 'op':
-            return self._opening(img)
+            return self._opening(img, as_gray)
         if operator == 'cl':
-            return self._closing(img)
+            return self._closing(img, as_gray)
         if operator == 'ig':
-            return self._internal_gradient(img)
+            return self._internal_gradient(img, as_gray)
         if operator == 'eg':
-            return self._external_gradient(img)
+            return self._external_gradient(img, as_gray)
         if operator == 'mg':
-            return self._morphological_gradient(img)
+            return self._morphological_gradient(img, as_gray)
         if operator == 'wth':
-            return self._white_top_hat(img)
+            return self._white_top_hat(img, as_gray)
         if operator == 'bth':
-            return self._black_top_hat(img)
+            return self._black_top_hat(img, as_gray)
 
         if n_iterations >= 1:
 
-            pad_img = np.zeros(pad_img_shape).astype(np.int8)
-            pad_img[radius-2:(w + radius-2), radius-2:(h + radius-2)] = img
-            img_result = np.zeros(pad_img_shape).astype(np.int8)
+            pad_img = np.zeros(pad_img_shape).astype(np.float64)
+            pad_img[radius-2:(w + radius-2), radius-2:(h + radius-2)] = img            
+            img_result = np.zeros(pad_img_shape).astype(np.float64)
 
             for i in range(w):
                 for j in range(h):
                     neighbors = pad_img[i:i+radius, j:j+radius]
+                    if as_gray:
+                        neighbors = np.delete(neighbors.flatten(), radius+1)
                     if operator == 'er':
                         img_result[i+1, j+1] = self._erosion(neighbors, as_gray)
                     if operator == 'di':
@@ -137,32 +139,32 @@ class FilterManager():
         else:
             return np.max(neighbors)
 
-    def _opening(self, img):
+    def _opening(self, img, as_gray):
         """Applies the opening operation"""
-        return self.apply_filter('di', self.apply_filter('er', img))
+        return self.apply_filter('di', self.apply_filter('er', img, as_gray=as_gray), as_gray=as_gray)
 
-    def _closing(self, img):
+    def _closing(self, img, as_gray):
         """Applies the closing operation"""
-        return self.apply_filter('er', self.apply_filter('di', img))
+        return self.apply_filter('er', self.apply_filter('di', img, as_gray=as_gray), as_gray=as_gray)
 
-    def _internal_gradient(self, img):
+    def _internal_gradient(self, img, as_gray):
         """Applies the internal gradient operation"""
-        return img - self.apply_filter('er', img)
+        return img - self.apply_filter('er', img, as_gray=as_gray)
 
-    def _external_gradient(self, img):
+    def _external_gradient(self, img, as_gray):
         """Applies the external gradient operation"""
-        return self.apply_filter('di', img) - img
+        return self.apply_filter('di', img, as_gray=as_gray) - img
 
-    def _morphological_gradient(self, img):
+    def _morphological_gradient(self, img, as_gray):
         """Applies the morphological gradient operation"""
-        return self.apply_filter('di', img) - self.apply_filter('er', img)
+        return self.apply_filter('di', img, as_gray=as_gray) - self.apply_filter('er', img, as_gray=as_gray)
 
-    def _white_top_hat(self, img):
+    def _white_top_hat(self, img, as_gray):
         """Applies the white top-hat operation"""
-        return self.apply_filter('op', img) - img
+        return self.apply_filter('op', img, as_gray=as_gray) - img
 
-    def _black_top_hat(self, img):
+    def _black_top_hat(self, img, as_gray):
         """Applies the black top-hat operation"""
-        bth = self.apply_filter('cl', img) - img
+        bth = self.apply_filter('cl', img, as_gray=as_gray) - img
         bth[bth == -1] = 1
         return bth
