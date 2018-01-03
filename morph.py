@@ -29,7 +29,7 @@ class FilterManager():
         img = self.apply_threshold(img)
         centered_img = np.ones_like(img, dtype=np.int64)
         half_w, half_h = centered_img.shape[0]//2, centered_img.shape[1]//2
-        cr_img = self.crop_zero_values(img, True)
+        cr_img = self._crop_zero_values(img, True)
         cr_w, cr_h = cr_img.shape
         center_y = half_h - (cr_h // 2)
         center_x = half_w - (cr_w // 2)
@@ -51,7 +51,7 @@ class FilterManager():
         return np.equal(np.take(window, self.selem_white_idx),
                         np.take(self.selem, self.selem_white_idx)).all()
 
-    def crop_zero_values(self, img, inverted=False):
+    def _crop_zero_values(self, img, inverted=False):
         """Crop zero values from the image boundaries returning a new image without empty borders"""
         width, height = img.shape
         xmin, xmax = 0, width
@@ -72,7 +72,7 @@ class FilterManager():
         return img[xmin:xmax+1, ymin:ymax+1]
 
     def apply_filter(self, operator='er', img=None, n_iterations=1, as_gray=False):
-        """Applies a morphological operator a certain number of times (n_iterations) to an image"""
+        """Applies a morphological operator to an image multiple times (n_iterations)"""
 
         if not as_gray:
             img = self.apply_threshold(img)
