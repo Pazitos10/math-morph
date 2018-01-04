@@ -48,8 +48,10 @@ class FilterManager():
 
     def _selem_is_contained_in(self, window):
         """Returns True if ee is contained in win. Otherwise, returns False"""
-        return np.equal(np.take(window, self.selem_white_idx),
-                        np.take(self.selem, self.selem_white_idx)).all()
+        #return np.equal(np.take(window, self.selem_white_idx),
+        #                np.take(self.selem, self.selem_white_idx)).all()
+        return np.array_equal(np.take(window, self.selem_white_idx),
+                              np.take(self.selem, self.selem_white_idx))
 
     def crop_zero_values(self, img, inverted=False):
         """Crop zero values from the image boundaries returning a new image without empty borders"""
@@ -90,7 +92,7 @@ class FilterManager():
         if operator == 'eg':
             return self._external_gradient(img, as_gray)
         if operator == 'mg':
-            return self._morphological_gradient(img, as_gray)
+            return self._morphologycal_gradient(img, as_gray)
         if operator == 'wth':
             return self._white_top_hat(img, as_gray)
         if operator == 'bth':
@@ -159,8 +161,8 @@ class FilterManager():
         """Applies the external gradient operation"""
         return self.apply_filter('di', img, as_gray=as_gray) - img
 
-    def _morphological_gradient(self, img, as_gray):
-        """Applies the morphological gradient operation"""
+    def _morphologycal_gradient(self, img, as_gray):
+        """Applies the morphologycal gradient operation"""
         dilated = self.apply_filter('di', img, as_gray=as_gray)
         eroded = self.apply_filter('er', img, as_gray=as_gray)
         return dilated - eroded
@@ -174,3 +176,21 @@ class FilterManager():
         bth = self.apply_filter('cl', img, as_gray=as_gray) - img
         bth[bth == -1] = 1
         return bth
+
+    def morphologycal_reconstruction(self, mark, mask, as_gray=False):
+        """Reconstructs objects in an image based on a mark and a mask (original image)"""
+        if not as_gray:
+            mask = self.apply_threshold(mask)
+
+        done = False
+        prev_reconst = np.zeros_like(mark)
+        aux = mark
+        while not done:
+            reconst = np.logical_and(aux, mask)
+            aux = self.apply_filter('di', reconst, as_gray=as_gray)
+            if not np.array_equal(reconst, prev_reconst):
+                prev_reconst = reconst
+            else:
+                done = True
+        return 1 - reconst
+            
