@@ -1,6 +1,6 @@
 #### Morphologycal operations made with Python
 
-##### To use
+##### How to use it
 
 ```python
 import numpy as np
@@ -19,8 +19,8 @@ plt.imshow(eroded_img)
 
 | Name | Description | Options |
 | --- | --- | --- | 
-| `apply_filter(operator='er', img=None, n_iterations=1, as_gray=False)` | Applies a morphological operator to an image multiple times (n_iterations) | Operators: `'er', 'di', 'op', 'cl', 'ig', 'eg', 'mg', 'wth', 'bth'` for Erosion, Dilation, Opening, Closing, Internal gradient, External gradient, Morphologycal gradient, White top-hat and Black top-hat respectively. `img` is a numpy array with values between 0 and 1 (grayscale). `as_gray` is either `True` or `False` to execute grayscale or binary operations (default `False`).
-| `apply_threshold(img, threshold=.5)` | Applies the given threshold to a grayscale image, converting it into black and white (0,1) | `threshold` is a number between 0.0 and 1.0.
+| `apply_filter(operator='er', img=None, n_iterations=1, as_gray=False)`| Applies a morphological operator to an image multiple times (n_iterations) | operator: <ul><li>`'er'`: Erosion. </li><li>`'di'`: Dilation. </li><li>`'op'`: Opening. </li><li>`'cl'`: Closing. </li><li>`'ig'`: Internal gradient. </li><li>`'eg'`: External Gradient. </li><li>`'mg'`: Morphologycal gradient. </li><li>`'wth'`: White top-hat. </li><li>`'bth'`: Black top-hat. </li></ul> img: <ul><li> Any numpy array with values between 0 and 1, representing a grayscale image. (default=`None`)</li></ul> n_iterations: <ul><li> Integer number indicating how many times to apply the selected filter over an image. (default=`1`)</li></ul> as_gray: <ul><li> `True` or `False` indicating whether to proceed executing grayscale or binary operations (default=`False`). </li></ul> 
+| `apply_threshold(img, threshold=.5)` | Applies the given threshold to a grayscale image, converting it into black and white (0,1) | threshold: <ul><li> Float number between 0.0 and 1.0. (default=`.5`) </li></ul>
 | `show(img, show_grid=True, show_ticks=False)` | Plot the given image (shorthand for plt.imshow with preset parameters) | 
 
 ##### Examples
