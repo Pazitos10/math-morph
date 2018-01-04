@@ -26,22 +26,22 @@ plt.imshow(eroded_img)
 ##### Examples
 
 Structuring elements:
-![](selem-types.png)
+![](images/selem-types.png)
 
 Different filters applied to the original image:
-![](filters.png)
+![](images/filters.png)
 
 A single filter applied multiple times to the original image:
-![](filters-multiple-times.png)
+![](images/filters-multiple-times.png)
 
 Different structuring element types (3x3)
-![](filters-multiple-selem.png)
+![](images/filters-multiple-selem.png)
 
 Different structuring element sizes
-![](filters-multiple-selem-sizes.png)
+![](images/filters-multiple-selem-sizes.png)
 
 Applying grayscale filters
-![](filters-grayscale.png)
+![](images/filters-grayscale.png)
 
 ##### To Do
 
