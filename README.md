@@ -1,4 +1,4 @@
-#### Morphologycal operations made with Python
+### Mathematical Morphology Operations done with Python.
 
 ##### How to use
 
