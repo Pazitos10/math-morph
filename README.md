@@ -2,19 +2,30 @@
 
 ##### How to use
 
-Suppose we have to erode a binary image:
+Suppose we have to erode this dummy binary image:
 
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
-
 from morph import morph_filter, show
+​
+img = np.array([[1,1,1,0],
+                [1,1,1,1], 
+                [1,1,1,1],
+                [0,1,1,1]], dtype=np.uint8)
+show(img, show_ticks=True, show_grid=True)
+```
+![](images/dummy-img.png)
 
+We need to create a structuring element (in this case a 3x3, square) in order to erode it and then call `morph_filter()` as follows:
+
+```python
 selem = np.ones((3, 3), dtype=np.int64)
 eroded_img = morph_filter('er', img, as_gray=False, n_iterations=1, sel=selem)
-
-show(eroded_img)
+show(eroded_img, show_ticks=True, show_grid=True)
 ```
+And this is the result:
+![](images/dummy-img-eroded.png)
 
 ##### Public functions
 
@@ -59,10 +70,20 @@ Then we use `morphological_reconstruction(mark, mask)` and here is the result:
 
 ![](images/morphologycal-reconstruction.png)
 
+##### Requirements
+
+In order to use morph.py you need to run the following command:
+
+```pip install matplotlib numpy```
+
+But if you want to be able to run the tests, you need to run this command:
+
+```pip install matplotlib numpy skimage unittest```
 
 ##### Tests
 
-There are 30 tests written using `unittest`. To run them:  `python -m unittest test_morph.py`
+There are 30 tests written using `unittest` and `skimage` (only to read the test images). 
+To run them execute the following command:  `python -m unittest test_morph.py`
 
 
 ##### To Do
