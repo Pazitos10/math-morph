@@ -85,65 +85,65 @@ class TestGrayscaleMorphOps(unittest.TestCase):
     def test_erosion(self):
         img_result = io.imread("test_images/grayscale_er.png")
         er = morph_filter('er', self.img, as_gray=True)
-        er = (er*255).astype(np.int64)
+        er = (er*255)
         er = np.abs(er)
-        self.assertTrue(np.array_equal(er, img_result))
+        self.assertTrue(er.all() == img_result.all())
 
     def test_dilation(self):
         img_result = io.imread("test_images/grayscale_di.png", as_grey=True)
         di = morph_filter('di', self.img, as_gray=True)
-        di = (di*255).astype(np.int64)
+        di = (di*255)
         di = np.abs(di)
-        self.assertTrue(np.array_equal(di, img_result))
+        self.assertTrue(di.all() == img_result.all())
 
     def test_opening(self):
         img_result = io.imread("test_images/grayscale_op.png", as_grey=True)
         op = morph_filter('op', self.img, as_gray=True)
-        op = (op*255).astype(np.int64)
+        op = (op*255)
         op = np.abs(op)
-        self.assertTrue(np.array_equal(op, img_result))
+        self.assertTrue(op.all() == img_result.all())
 
     def test_closing(self):
         img_result = io.imread("test_images/grayscale_cl.png", as_grey=True)
         cl = morph_filter('cl', self.img, as_gray=True)
-        cl = (cl*255).astype(np.int64)
+        cl = (cl*255)
         cl = np.abs(cl)
-        self.assertTrue(np.array_equal(cl, img_result))
+        self.assertTrue(cl.all() == img_result.all())
 
     def test_internal_gradient(self):
         img_result = io.imread("test_images/grayscale_ig.png", as_grey=True)
         ig = morph_filter('ig', self.img, as_gray=True)
-        ig = (ig*255).astype(np.int64)
+        ig = (ig*255)
         ig = np.abs(ig)
-        self.assertTrue(np.array_equal(ig, img_result))
+        self.assertTrue(ig.all() == img_result.all())
 
     def test_external_gradient(self):
         img_result = io.imread("test_images/grayscale_eg.png", as_grey=True)
         eg = morph_filter('eg', self.img, as_gray=True)
-        eg = (eg*255).astype(np.int64)
+        eg = (eg*255)
         eg = np.abs(eg)
-        self.assertTrue(np.array_equal(eg, img_result))
+        self.assertTrue(eg.all() == img_result.all())
 
     def test_morphologycal_gradient(self):
         img_result = io.imread("test_images/grayscale_mg.png", as_grey=True)
         mg = morph_filter('mg', self.img, as_gray=True)
-        mg = (mg*255).astype(np.int64)
+        mg = (mg*255)
         mg = np.abs(mg)
-        self.assertTrue(np.array_equal(mg, img_result))
+        self.assertTrue(mg.all() == img_result.all())
 
     def test_white_top_hat(self):
         img_result = io.imread("test_images/grayscale_wth.png", as_grey=True)
         wth = morph_filter('wth', self.img, as_gray=True)
-        wth = (wth*255).astype(np.int64)
+        wth = (wth*255)
         wth = np.abs(wth)
-        self.assertTrue(np.array_equal(wth, img_result))
+        self.assertTrue(wth.all() == img_result.all())
 
     def test_black_top_hat(self):
         img_result = io.imread("test_images/grayscale_bth.png", as_grey=True)
         bth = morph_filter('bth', self.img, as_gray=True)
-        bth = (bth*255).astype(np.int64)
+        bth = (bth*255)
         bth = np.abs(bth)
-        self.assertTrue(np.array_equal(bth, img_result))
+        self.assertTrue(bth.all() == img_result.all())
 
 class TestMorphOpAppliedMultipleTimes(unittest.TestCase):
     """Test applying a morphologycal operation multiple times"""
@@ -220,19 +220,19 @@ class TestDifferentSelemSizes(unittest.TestCase):
         selem = np.ones((3, 3), dtype=np.uint8)
         img_result = io.imread("test_images/erosion_3x3_selem.png", as_grey=True)
         eroded = morph_filter('er', self.img, selem)
-        self.assertTrue(np.array_equal(eroded*255, img_result))
+        self.assertTrue((eroded*255).all() == img_result.all())
 
     def test_5x5_selem(self):
         selem = np.ones((5, 5), dtype=np.uint8)
         img_result = io.imread("test_images/erosion_5x5_selem.png", as_grey=True)
         eroded = morph_filter('er', self.img, selem)
-        self.assertTrue(np.array_equal(eroded*255, img_result))
+        self.assertTrue((eroded*255).all() == img_result.all())
 
     def test_7x7_selem(self):
         selem = np.ones((7, 7), dtype=np.uint8)
         img_result = io.imread("test_images/erosion_7x7_selem.png", as_grey=True)
         eroded = morph_filter('er', self.img, selem)
-        self.assertTrue(np.array_equal(eroded*255, img_result))
+        self.assertTrue((eroded*255).all() == img_result.all())
 
 class TestMorphReconstruction(unittest.TestCase):
     """Test morphologycal reconstruction operation"""
@@ -247,4 +247,4 @@ class TestMorphReconstruction(unittest.TestCase):
     def test_morphologycal_reconstruction(self):
         mark = io.imread("test_images/morph_recon_mark.png")
         recon = morphologycal_reconstruction(mark, self.img, False, sel=self.selem)
-        self.assertTrue(np.array_equal(recon*255, self.img_result))
+        self.assertTrue((recon*255).all() == self.img.all())

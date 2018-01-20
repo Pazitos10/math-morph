@@ -2,9 +2,12 @@
     using the given structuring element.
     author: @pazitos10
 """
+from itertools import product
 import matplotlib.pyplot as plt
 import numpy as np
 
+_WIDTH = 0
+_HEIGHT = 0
 _SELEM = np.ones((3, 3), dtype=np.int64)
 
 def show(img, show_grid=True, show_ticks=False):
@@ -27,7 +30,7 @@ def _center_img(img):
     img = apply_threshold(img)
     centered_img = np.ones_like(img, dtype=np.int64)
     half_w, half_h = centered_img.shape[0]//2, centered_img.shape[1]//2
-    cr_img = _crop_zero_values(img, True)
+    cr_img = crop_zero_values(img, True)
     cr_w, cr_h = cr_img.shape
     center_y = half_h - (cr_h // 2)
     center_x = half_w - (cr_w // 2)
@@ -43,11 +46,12 @@ def apply_threshold(img, threshold=.5):
 
 def _selem_is_contained_in(window):
     """Returns True if ee is contained in win. Otherwise, returns False"""
-    selem_white_idx = np.where(_SELEM.flatten() == 1)
-    return np.array_equal(np.take(window, selem_white_idx),
-                          np.take(_SELEM, selem_white_idx))
+    selem_white_idx = np.where(_SELEM.flatten() == 1)[0]
+    selem_sum = np.sum(_SELEM)
+    win_sum = np.sum(np.take(window, selem_white_idx))
+    return True if win_sum == selem_sum else False
 
-def _crop_zero_values(img, inverted=False):
+def crop_zero_values(img, inverted=False):
     """Crop zero values from the image boundaries returning a new image without empty borders"""
     width, height = img.shape
     xmin, xmax = 0, width
@@ -59,26 +63,36 @@ def _crop_zero_values(img, inverted=False):
         ymin, ymax = min(ones_y), max(ones_y)
     return img[xmin:xmax+1, ymin:ymax+1]
 
+def add_padding(img, radius):
+    width, height = img.shape
+    pad_img_shape = (width + radius - 1, height + radius - 1)
+    pad_img = np.zeros(pad_img_shape).astype(np.float64)
+    pad_img[radius-2:(width + radius-2), radius-2:(height + radius-2)] = img
+    return pad_img
+
+def process_pixel(pixel_coord, operation, as_gray, img):
+    i, j = pixel_coord
+    radius = _SELEM.shape[0]
+    neighbors = img[i:i+radius, j:j+radius]
+    if as_gray:
+        neighbors = np.delete(neighbors.flatten(), radius+1)
+    return operation(neighbors, as_gray)
+
 def _apply_filter(operation, img, as_gray, n_iterations, sel):
     """Applies a morphological operator a certain number of times (n_iterations) to an image"""
-    global _SELEM
-    img = img if as_gray else apply_threshold(img)
+    global _SELEM, _WIDTH, _HEIGHT
     _SELEM = sel
-    width, height = img.shape
+    orig_width, orig_height = _WIDTH, _HEIGHT
+    img = img if as_gray else apply_threshold(img)
     radius = _SELEM.shape[0]
-    pad_img_shape = (width + radius - 1, height + radius - 1)
+    width, height = img.shape
+    prod = product(range(width), range(height))
+    pad_img = add_padding(img, radius)
+    img_result = []
     if n_iterations >= 1:
-        pad_img = np.zeros(pad_img_shape).astype(np.float64)
-        pad_img[radius-2:(width + radius-2), radius-2:(height + radius-2)] = img
-        img_result = np.zeros(pad_img_shape).astype(np.float64)
-        for i in range(width):
-            for j in range(height):
-                neighbors = pad_img[i:i+radius, j:j+radius]
-                if as_gray:
-                    neighbors = np.delete(neighbors.flatten(), radius+1)
-                img_result[i+1, j+1] = operation(neighbors, as_gray)
-
-        img_result = img_result[radius-2:width+radius-2, radius-2:height+radius-2]
+        seq = map(lambda pixel_coord: process_pixel(pixel_coord, operation, as_gray, pad_img), prod)
+        img_result = np.fromiter(list(seq), dtype=np.float)
+        img_result = img_result.reshape((orig_width, orig_height))
         return _apply_filter(operation, img_result, as_gray, n_iterations-1, sel)
     return img
 
@@ -152,8 +166,9 @@ def _black_top_hat(img, as_gray, n_iterations, sel):
 
 def morphologycal_reconstruction(mark, mask, as_gray, sel):
     """Reconstructs objects in an image based on a mark and a mask (original image)"""
-    if not as_gray:
-        mask = apply_threshold(mask)
+    global _WIDTH, _HEIGHT
+    _WIDTH, _HEIGHT = mask.shape
+    mask = mask if as_gray else apply_threshold(mask)
     done = False
     prev_reconst = np.zeros_like(mark)
     aux = mark
@@ -184,4 +199,6 @@ def morph_filter(operator='er',
                  n_iterations=1,
                  as_gray=False):
     """Allows to apply multiple morphologycal operations over an image"""
+    global _WIDTH, _HEIGHT
+    _WIDTH, _HEIGHT = img.shape
     return _OPS[operator](img, as_gray, n_iterations, sel)
