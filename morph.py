@@ -5,6 +5,8 @@
 from itertools import product
 import matplotlib.pyplot as plt
 import numpy as np
+from functools import reduce
+from skimage.morphology import binary_dilation, dilation
 
 _WIDTH = 0
 _HEIGHT = 0
@@ -45,12 +47,17 @@ def apply_threshold(img, threshold=.5):
     return result
 
 def _selem_is_contained_in(window):
-    """Returns True if ee is contained in win. Otherwise, returns False"""
-    selem_white_idx = np.where(_SELEM.flatten() == 1)[0]
-    selem_sum = np.sum(_SELEM)
-    win_sum = np.sum(np.take(window, selem_white_idx))
-    return True if win_sum == selem_sum else False
-
+    """Returns True if ee is contained in win. Otherwise, returns False"""        
+    #selem_white_idx = np.where(_SELEM.flatten() == 1)[0]
+    #selem_sum = np.sum(_SELEM)
+    #win_sum = np.sum(np.take(window, selem_white_idx))
+    #return True if win_sum == selem_sum else False
+    
+    idx_selem = np.where(_SELEM.ravel() == 1)[0]
+    idx_win = np.where(window.ravel() == 1)[0]
+    return set(idx_selem) <= set(idx_win)
+    
+    
 def crop_zero_values(img, inverted=False):
     """Crop zero values from the image boundaries returning a new image without empty borders"""
     width, height = img.shape
@@ -70,13 +77,13 @@ def add_padding(img, radius):
     pad_img[radius-2:(width + radius-2), radius-2:(height + radius-2)] = img
     return pad_img
 
-def process_pixel(pixel_coord, operation, as_gray, img):
-    i, j = pixel_coord
+def process_pixel(i, j, operation, as_gray, img):
     radius = _SELEM.shape[0]
     neighbors = img[i:i+radius, j:j+radius]
     if as_gray:
         neighbors = np.delete(neighbors.flatten(), radius+1)
     return operation(neighbors, as_gray)
+
 
 def _apply_filter(operation, img, as_gray, n_iterations, sel):
     """Applies a morphological operator a certain number of times (n_iterations) to an image"""
@@ -88,11 +95,13 @@ def _apply_filter(operation, img, as_gray, n_iterations, sel):
     width, height = img.shape
     prod = product(range(width), range(height))
     pad_img = add_padding(img, radius)
-    img_result = []
+    img_result = np.zeros_like(img)
     if n_iterations >= 1:
-        seq = map(lambda pixel_coord: process_pixel(pixel_coord, operation, as_gray, pad_img), prod)
-        img_result = np.fromiter(list(seq), dtype=np.float)
-        img_result = img_result.reshape((orig_width, orig_height))
+        for i, j in prod:
+            if operation == 'er' and pad_img[i, j] == 1 :
+                img_result[i, j] = process_pixel(i, j, operation, as_gray, pad_img)
+            else:
+                img_result[i, j] = process_pixel(i, j, operation, as_gray, pad_img)
         return _apply_filter(operation, img_result, as_gray, n_iterations-1, sel)
     return img
 
@@ -108,19 +117,20 @@ def _apply_erosion(neighbors, as_gray):
     """Modifies the current pixel value considering its neighbors
         and the erosion operation rules."""
     if not as_gray:
-        if _selem_is_contained_in(neighbors):
-            return 1
+        if max(neighbors.ravel()) == 1:
+            if _selem_is_contained_in(neighbors):
+                return 1
         return 0
-    return np.min(neighbors)
+    return min(neighbors.ravel())
 
 def _apply_dilation(neighbors, as_gray):
     """Modifies the current pixel value considering its neighbors
         and the dilation operation rules."""
     if not as_gray:
-        if np.sum(neighbors) > 0:
-            return 1
-        return 0
-    return np.max(neighbors)
+        if max(neighbors.ravel()) == 0:
+            return 0
+        return 1
+    return max(neighbors.ravel())
 
 def _opening(img, as_gray, n_iterations, sel):
     """Applies the opening operation"""
