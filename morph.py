@@ -8,8 +8,7 @@ import numpy as np
 from functools import reduce
 from skimage.morphology import binary_dilation, dilation
 
-_WIDTH = 0
-_HEIGHT = 0
+
 _SELEM = np.ones((3, 3), dtype=np.int64)
 
 def show(img, show_grid=True, show_ticks=False):
@@ -87,18 +86,17 @@ def process_pixel(i, j, operation, as_gray, img):
 
 def _apply_filter(operation, img, as_gray, n_iterations, sel):
     """Applies a morphological operator a certain number of times (n_iterations) to an image"""
-    global _SELEM, _WIDTH, _HEIGHT
+    global _SELEM
     _SELEM = sel
-    orig_width, orig_height = _WIDTH, _HEIGHT
     img = img if as_gray else apply_threshold(img)
-    radius = _SELEM.shape[0]
     width, height = img.shape
     prod = product(range(width), range(height))
-    pad_img = add_padding(img, radius)
     img_result = np.zeros_like(img)
+    radius = _SELEM.shape[0]
+    pad_img = add_padding(img, radius)
     if n_iterations >= 1:
         for i, j in prod:
-            if operation == 'er' and pad_img[i, j] == 1 :
+            if operation == 'er' and pad_img[i, j] == 1:
                 img_result[i, j] = process_pixel(i, j, operation, as_gray, pad_img)
             else:
                 img_result[i, j] = process_pixel(i, j, operation, as_gray, pad_img)
@@ -135,7 +133,8 @@ def _apply_dilation(neighbors, as_gray):
 def _opening(img, as_gray, n_iterations, sel):
     """Applies the opening operation"""
     eroded = _erosion(img, as_gray, n_iterations, sel)
-    return _dilation(eroded, as_gray, n_iterations, sel)
+    dilated = _dilation(eroded, as_gray, n_iterations, sel)
+    return dilated
 
 def _closing(img, as_gray, n_iterations, sel):
     """Applies the closing operation"""
@@ -176,8 +175,6 @@ def _black_top_hat(img, as_gray, n_iterations, sel):
 
 def morphologycal_reconstruction(mark, mask, as_gray, sel):
     """Reconstructs objects in an image based on a mark and a mask (original image)"""
-    global _WIDTH, _HEIGHT
-    _WIDTH, _HEIGHT = mask.shape
     mask = mask if as_gray else apply_threshold(mask)
     done = False
     prev_reconst = np.zeros_like(mark)
@@ -209,6 +206,4 @@ def morph_filter(operator='er',
                  n_iterations=1,
                  as_gray=False):
     """Allows to apply multiple morphologycal operations over an image"""
-    global _WIDTH, _HEIGHT
-    _WIDTH, _HEIGHT = img.shape
     return _OPS[operator](img, as_gray, n_iterations, sel)
