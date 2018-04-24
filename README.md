@@ -78,7 +78,7 @@ In order to use morph.py you need to run the following command:
 
 But if you want to be able to run the tests, you need to run this command:
 
-```pip install matplotlib numpy skimage unittest```
+```pip install matplotlib numpy scikit-image```
 
 ##### Tests
 
