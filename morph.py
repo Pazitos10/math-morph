@@ -96,10 +96,10 @@ def _apply_filter(operation, img, as_gray, n_iterations, sel):
     pad_img = add_padding(img, radius)
     if n_iterations >= 1:
         for i, j in prod:
-            if operation == 'er' and pad_img[i, j] == 1:
-                img_result[i, j] = process_pixel(i, j, operation, as_gray, pad_img)
-            else:
-                img_result[i, j] = process_pixel(i, j, operation, as_gray, pad_img)
+            #if operation == 'er' and pad_img[i, j] == 1:
+            #    img_result[i, j] = process_pixel(i, j, operation, as_gray, pad_img)
+            #else:
+            img_result[i, j] = process_pixel(i, j, operation, as_gray, pad_img)
         return _apply_filter(operation, img_result, as_gray, n_iterations-1, sel)
     return img
 
@@ -151,8 +151,8 @@ def _external_gradient(img, as_gray, n_iterations, sel):
     img = img if as_gray else apply_threshold(img)
     return _dilation(img, as_gray, n_iterations, sel) - img
 
-def _morphologycal_gradient(img, as_gray, n_iterations, sel):
-    """Applies the morphologycal gradient operation"""
+def _morphological_gradient(img, as_gray, n_iterations, sel):
+    """Applies the morphological gradient operation"""
     dilated = _dilation(img, as_gray, n_iterations, sel)
     eroded = _erosion(img, as_gray, n_iterations, sel)
     return dilated - eroded
@@ -173,7 +173,7 @@ def _black_top_hat(img, as_gray, n_iterations, sel):
         return apply_threshold(bth)
     return _closing(img, as_gray, n_iterations, sel) - img
 
-def morphologycal_reconstruction(mark, mask, as_gray, sel):
+def morphological_reconstruction(mark, mask, as_gray, sel):
     """Reconstructs objects in an image based on a mark and a mask (original image)"""
     mask = mask if as_gray else apply_threshold(mask)
     done = False
@@ -195,7 +195,7 @@ _OPS = {
     'cl': _closing,
     'ig': _internal_gradient,
     'eg': _external_gradient,
-    'mg': _morphologycal_gradient,
+    'mg': _morphological_gradient,
     'wth': _white_top_hat,
     'bth': _black_top_hat
 }
@@ -205,5 +205,5 @@ def morph_filter(operator='er',
                  sel=np.ones((3, 3), dtype=np.int64),
                  n_iterations=1,
                  as_gray=False):
-    """Allows to apply multiple morphologycal operations over an image"""
+    """Allows to apply multiple morphological operations over an image"""
     return _OPS[operator](img, as_gray, n_iterations, sel)
