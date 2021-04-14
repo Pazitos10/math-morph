@@ -63,21 +63,17 @@ Original:
 
 ![](images/chars.bmp)
 
-Applying erosion filter multiple times with an appropiated structuring element, we create a mark to isolate 2 and Q.
+Applying erosion filter multiple times with an appropiated structuring element, we create a mark/seed to isolate 2 and Q.
 
 ![](images/morphological-mark.png)
 
 Then we use `morphological_reconstruction(mark, mask)` and here is the result:
 
-![](images/morphologycal-reconstruction.png)
+![](images/morphological-reconstruction.png)
 
 ##### Requirements
 
 In order to use morph.py you need to run the following command:
-
-```pip install matplotlib numpy```
-
-But if you want to be able to run the tests, you need to run this command:
 
 ```pip install matplotlib numpy scikit-image```
 
